@@ -4,6 +4,7 @@ import com.orderflow.user_service.dto.request.UserRegistrationRequest;
 import com.orderflow.user_service.dto.response.UserResponse;
 import com.orderflow.user_service.entity.User;
 import com.orderflow.user_service.exception.UserAlreadyExistsException;
+import com.orderflow.user_service.exception.UserNotFoundException;
 import com.orderflow.user_service.repository.UserRepository;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -32,16 +33,24 @@ public class UserService {
         user.setPassword(passwordEncoder.encode(request.getPassword()));
         user.setPhone(request.getPhone());
 
-        User savedUser = userRepository.save(user);
+        return mapToUserResponse(userRepository.save(user));
+    }
 
+    public UserResponse getUserByEmail(String email) {
+        User user = userRepository.findByEmail(email.trim().toLowerCase())
+                .orElseThrow(() -> new UserNotFoundException("User not found: " + email));
+
+        return mapToUserResponse(user);
+    }
+
+    private UserResponse mapToUserResponse(User user) {
         UserResponse response = new UserResponse();
-        response.setId(savedUser.getId());
-        response.setName(savedUser.getName());
-        response.setEmail(savedUser.getEmail());
-        response.setPhone(savedUser.getPhone());
-        response.setRole(savedUser.getRole());
-        response.setCreatedAt(savedUser.getCreatedAt());
-
+        response.setId(user.getId());
+        response.setName(user.getName());
+        response.setEmail(user.getEmail());
+        response.setPhone(user.getPhone());
+        response.setRole(user.getRole());
+        response.setCreatedAt(user.getCreatedAt());
         return response;
     }
 }
