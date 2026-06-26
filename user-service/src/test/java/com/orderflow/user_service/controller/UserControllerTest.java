@@ -16,6 +16,9 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import org.springframework.test.web.servlet.MvcResult;
+import com.jayway.jsonpath.JsonPath;
 
 @SpringBootTest
 @ActiveProfiles("test")
@@ -52,5 +55,40 @@ class UserControllerTest {
                 .andExpect(jsonPath("$.success").value(true))
                 .andExpect(jsonPath("$.data.email").value("integration@test.com"))
                 .andExpect(jsonPath("$.data.role").value("USER"));
+    }
+
+    @Test
+    void getMe_withoutToken_returns401() throws Exception {
+        mockMvc.perform(get("/api/v1/users/me"))
+                .andExpect(status().isUnauthorized())
+                .andExpect(jsonPath("$.success").value(false));
+    }
+
+    @Test
+    @Transactional
+    void getMe_withValidToken_returns200() throws Exception {
+        UserRegistrationRequest request = new UserRegistrationRequest();
+        request.setName("Me User");
+        request.setEmail("me@test.com");
+        request.setPassword("Test@1234");
+
+        mockMvc.perform(post("/api/v1/users/register")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(jsonMapper.writeValueAsString(request)))
+                .andExpect(status().isCreated());
+
+        MvcResult loginResult = mockMvc.perform(post("/api/v1/auth/login")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"email\":\"me@test.com\",\"password\":\"Test@1234\"}"))
+                .andExpect(status().isOk())
+                .andReturn();
+
+        String token = JsonPath.read(loginResult.getResponse().getContentAsString(), "$.data.token");
+
+        mockMvc.perform(get("/api/v1/users/me")
+                        .header("Authorization", "Bearer " + token))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.data.email").value("me@test.com"));
     }
 }
