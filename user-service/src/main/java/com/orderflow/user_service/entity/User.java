@@ -4,6 +4,7 @@ import com.orderflow.user_service.base.Auditable;
 import com.orderflow.user_service.enums.Role;
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.envers.Audited;
 
 @Entity
 @Table(name = "users")
@@ -12,6 +13,7 @@ import lombok.*;
 @AllArgsConstructor
 @EqualsAndHashCode(callSuper = true)
 @ToString(exclude = "password")
+@Audited
 public class User extends Auditable {
 
     @Id

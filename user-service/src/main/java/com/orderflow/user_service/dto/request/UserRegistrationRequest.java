@@ -20,7 +20,7 @@ public class UserRegistrationRequest {
     private String email;
 
     @NotBlank(message = "Password is required")
-    @Size(min = 8, message = "Password must contain at least 8 character")
+    @Size(min = 8, message = "Password must contain at least 8 characters")
     private String password;
 
     @Pattern(regexp = "^[+]?[0-9]{7,15}$", message = "Phone must be a valid number")

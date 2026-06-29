@@ -5,6 +5,7 @@ import com.orderflow.user_service.dto.response.UserResponse;
 import com.orderflow.user_service.entity.User;
 import com.orderflow.user_service.enums.Role;
 import com.orderflow.user_service.exception.UserAlreadyExistsException;
+import com.orderflow.user_service.exception.UserNotFoundException;
 import com.orderflow.user_service.repository.UserRepository;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -12,6 +13,9 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.crypto.password.PasswordEncoder;
+
+import java.util.Optional;
+
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 import static org.junit.jupiter.api.Assertions.*;
@@ -69,5 +73,36 @@ public class UserServiceTest {
 
         // Act + Assert
         assertThrows(UserAlreadyExistsException.class, () -> userService.registerUser(request));
+    }
+
+    @Test
+    void getUserByEmail_success_returnsUserResponse() {
+
+        // Arrange
+        User savedUser = new User();
+        savedUser.setId(1L);
+        savedUser.setName("Yash");
+        savedUser.setEmail("yash@test.com");
+        savedUser.setRole(Role.USER);
+
+        when(userRepository.findByEmail("yash@test.com")).thenReturn(Optional.of(savedUser));
+
+        // Act
+        UserResponse response = userService.getUserByEmail("yash@test.com");
+
+        // Assert
+        assertNotNull(response);
+        assertEquals("yash@test.com", response.getEmail());
+        assertEquals(Role.USER, response.getRole());
+    }
+
+    @Test
+    void getUserByEmail_userNotFound_throwsException() {
+
+        // Arrange
+        when(userRepository.findByEmail("yash@test.com")).thenReturn(Optional.empty());
+
+        // Act + Assert
+        assertThrows(UserNotFoundException.class, () -> userService.getUserByEmail("yash@test.com"));
     }
 }

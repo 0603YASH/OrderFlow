@@ -36,6 +36,7 @@ public class UserService {
         return mapToUserResponse(userRepository.save(user));
     }
 
+    @Transactional(readOnly = true)
     public UserResponse getUserByEmail(String email) {
         User user = userRepository.findByEmail(email.trim().toLowerCase())
                 .orElseThrow(() -> new UserNotFoundException("User not found: " + email));
